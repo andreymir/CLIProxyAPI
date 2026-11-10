@@ -166,6 +166,9 @@ func (e *ClaudeExecutor) countTokensUpstream(ctx context.Context, auth *cliproxy
 		originalPayload = opts.OriginalRequest
 	}
 	incomingHeaders, claudeCodeDetection := detectIncomingClaudeCodeRequest(ctx, opts.Headers, originalPayload, true, e.cfg)
+	if errGate := rejectUnconfirmedClaudeOAuth(apiKey, claudeCodeDetection); errGate != nil {
+		return cliproxyexecutor.Response{}, errGate
+	}
 	initialPolicy, initialSettings := resolveClaudeWirePolicy(e.cfg, auth, apiKey, claudeCodeDetection.Confirmed)
 	confirmedClaudeCode := isEffectiveConfirmedClaudeCode(claudeCodeDetection, initialPolicy)
 	ctx = e.pinResponsesSystemItemPlacement(ctx, auth, from, upstreamModel, initialPolicy, initialSettings)
