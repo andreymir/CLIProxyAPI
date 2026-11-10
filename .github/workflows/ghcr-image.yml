@@ -1,0 +1,67 @@
+name: ghcr-image
+
+on:
+  push:
+    tags:
+      - "v*-andrei.*"
+
+permissions: {}
+
+env:
+  IMAGE: ghcr.io/andreymir/cli-proxy-api
+  # Reviewed commit of router-for-me/models embedded into the image.
+  MODELS_REPOSITORY_REF: 7e3acaf1718cde6e1f3623d142e29a177221e66a
+
+jobs:
+  image_amd64:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Test patched packages
+        run: go test ./sdk/access/... ./internal/access/... ./internal/runtime/executor/... ./cmd/server/...
+      - name: Refresh models catalog
+        run: bash .github/scripts/refresh-model-catalogs.sh
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate build metadata
+        run: |
+          {
+            echo "VERSION=${GITHUB_REF_NAME}"
+            echo "COMMIT=$(git rev-parse --short HEAD)"
+            echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } >> "$GITHUB_ENV"
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          # Required: a Git context would discard the refreshed model catalog.
+          context: .
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          build-args: |
+            VERSION=${{ env.VERSION }}
+            COMMIT=${{ env.COMMIT }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
+          tags: ${{ env.IMAGE }}:${{ env.VERSION }}
+      - name: Report digest
+        run: echo "Digest ${DIGEST}" | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
