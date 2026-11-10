@@ -829,6 +829,9 @@ func main() {
 			}
 		} else {
 			// Start the main proxy service
+			if !hasConfiguredAccessKey(cfg) {
+				log.Fatal("refusing to start: access.api-keys has no usable key")
+			}
 			managementasset.StartAutoUpdater(context.Background(), configFilePath)
 			misc.StartAntigravityVersionUpdater(context.Background())
 			registry.SetLocalModelCatalogs(localModel)
