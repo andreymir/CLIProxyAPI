@@ -1624,6 +1624,7 @@ func TestEndToEndAuthFileReplacement_RestoresModelsInV1ModelsWithoutRestart(t *t
 			AllowRemote: true,
 		},
 	}
+	cfg.APIKeys = []string{"test-key"}
 
 	service, errBuild := NewBuilder().
 		WithConfig(cfg).
@@ -1669,6 +1670,7 @@ func TestEndToEndAuthFileReplacement_RestoresModelsInV1ModelsWithoutRestart(t *t
 	// 1. Confirm all team models are initially visible in GET /v1/models
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("GET /v1/models initial status = %d, body = %s", rec.Code, rec.Body.String())
@@ -1714,6 +1716,7 @@ func TestEndToEndAuthFileReplacement_RestoresModelsInV1ModelsWithoutRestart(t *t
 	// Confirm all 4 models are now omitted from /v1/models due to active error/cooldown
 	rec = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	handler.ServeHTTP(rec, req)
 	modelsResp.Data = nil
 	if err := json.Unmarshal(rec.Body.Bytes(), &modelsResp); err != nil {
@@ -1752,6 +1755,7 @@ func TestEndToEndAuthFileReplacement_RestoresModelsInV1ModelsWithoutRestart(t *t
 	// 4. Verify that GET /v1/models immediately includes all team models without restart
 	rec = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	handler.ServeHTTP(rec, req)
 	modelsResp.Data = nil
 	if err := json.Unmarshal(rec.Body.Bytes(), &modelsResp); err != nil {
@@ -1802,6 +1806,7 @@ func TestEndToEndAuthFilePatch_RestoresModelsInV1ModelsWithoutRestart(t *testing
 			AllowRemote: true,
 		},
 	}
+	cfg.APIKeys = []string{"test-key"}
 
 	service, errBuild := NewBuilder().
 		WithConfig(cfg).
@@ -1864,6 +1869,7 @@ func TestEndToEndAuthFilePatch_RestoresModelsInV1ModelsWithoutRestart(t *testing
 	// Confirm all 4 models are now omitted from /v1/models due to active error/cooldown
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	handler.ServeHTTP(rec, req)
 	var modelsResp struct {
 		Data []map[string]any `json:"data"`
@@ -1899,6 +1905,7 @@ func TestEndToEndAuthFilePatch_RestoresModelsInV1ModelsWithoutRestart(t *testing
 	// 3. Confirm all team models are restored in /v1/models
 	rec = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+	req.Header.Set("Authorization", "Bearer test-key")
 	handler.ServeHTTP(rec, req)
 	modelsResp.Data = nil
 	if err := json.Unmarshal(rec.Body.Bytes(), &modelsResp); err != nil {

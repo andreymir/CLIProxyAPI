@@ -29,7 +29,7 @@ jobs:
           go-version-file: go.mod
           cache: true
       - name: Test patched packages
-        run: go test ./sdk/access/... ./internal/access/... ./internal/runtime/executor/... ./cmd/server/...
+        run: go test ./sdk/access/... ./internal/access/... ./internal/runtime/executor/... ./cmd/server/... ./internal/api/... ./sdk/cliproxy/...
       - name: Refresh models catalog
         run: bash .github/scripts/refresh-model-catalogs.sh
       - name: Set up Docker Buildx
