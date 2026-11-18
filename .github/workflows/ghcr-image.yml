@@ -10,7 +10,7 @@ permissions: {}
 env:
   IMAGE: ghcr.io/andreymir/cli-proxy-api
   # Reviewed commit of router-for-me/models embedded into the image.
-  MODELS_REPOSITORY_REF: 7e3acaf1718cde6e1f3623d142e29a177221e66a
+  MODELS_REPOSITORY_REF: 829b3b7f5cb34ca0c568d753e481ae0e054b206b
 
 jobs:
   image_amd64:
